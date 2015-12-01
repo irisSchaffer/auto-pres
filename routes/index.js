@@ -15,3 +15,23 @@ router.post('/', function(req, res, next) {
 });
 
 module.exports = router;
+
+var AYLIENTextAPI = require("aylien_textapi");
+var textapi = new AYLIENTextAPI({
+  application_id: "80889f4e",
+  application_key: "48d80b752d6cd44405ade5da12080d06"
+});
+
+var text = "John is a very good football player!";
+
+textapi.sentiment({"text": text}, function(error, response) {
+  if (error === null) {
+    console.log(response);
+  }
+});
+
+textapi.language({"text": text}, function(error, response) {
+  if (error === null) {
+    console.log(response);
+  }
+});
