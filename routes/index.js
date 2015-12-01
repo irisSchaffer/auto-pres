@@ -14,6 +14,10 @@ router.post('/', function(req, res, next) {
   ] });
 });
 
+router.post('/slides', function(req, res, next) {
+	console.log(req.body);
+});
+
 module.exports = router;
 
 var AYLIENTextAPI = require("aylien_textapi");
