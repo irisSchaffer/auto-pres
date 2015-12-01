@@ -7,11 +7,15 @@ router.get('/', function(req, res, next) {
 });
 
 router.get('/test', function(req, res, next) {
-  res.render('presentation', { images: [
-    "http://www.planwallpaper.com/static/images/Winter-Tiger-Wild-Cat-Images.jpg",
-    "http://www.gettyimages.ca/gi-resources/images/Homepage/Hero/UK/CMS_Creative_164657191_Kingfisher.jpg",
-    "http://blog.jimdo.com/wp-content/uploads/2014/01/tree-247122.jpg",
-  ] });
+  res.render('presentation',
+  {
+      layout: '',
+      images: [
+        "http://www.planwallpaper.com/static/images/Winter-Tiger-Wild-Cat-Images.jpg",
+        "http://www.gettyimages.ca/gi-resources/images/Homepage/Hero/UK/CMS_Creative_164657191_Kingfisher.jpg",
+        "http://blog.jimdo.com/wp-content/uploads/2014/01/tree-247122.jpg",
+      ]
+  });
 });
 
 module.exports = router;
