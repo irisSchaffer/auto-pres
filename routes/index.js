@@ -6,7 +6,7 @@ router.get('/', function(req, res, next) {
   res.render('index', { title: 'Express' });
 });
 
-router.post('/', function(req, res, next) {
+router.get('/test', function(req, res, next) {
   res.render('presentation', { images: [
     "http://www.planwallpaper.com/static/images/Winter-Tiger-Wild-Cat-Images.jpg",
     "http://www.gettyimages.ca/gi-resources/images/Homepage/Hero/UK/CMS_Creative_164657191_Kingfisher.jpg",
