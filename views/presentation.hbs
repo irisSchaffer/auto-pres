@@ -39,8 +39,11 @@
 <div class="reveal">
     <div class="slides">
         {{#each images}}
-            <section data-background="{{ this }}">
-                <h2>Test</h2>
+            <section data-background="{{ img_url }}">
+                <!--<h2>Test</h2>-->
+                <aside class="notes">
+                    {{ text }}
+                </aside>
             </section>
         {{/each}}
     </div>
