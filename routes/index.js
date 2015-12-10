@@ -1,12 +1,18 @@
 var express = require('express');
 var router = express.Router();
+
 var Q = require('q');
+var requestify = require('requestify');
 
 var AYLIENTextAPI = require("aylien_textapi");
 var textapi = new AYLIENTextAPI({
   application_id: "80889f4e",
   application_key: "48d80b752d6cd44405ade5da12080d06"
 });
+
+var googleAPIKey = "AIzaSyDjP8xj-TC_meQ4-gtoFVKr65yCpk1HPOc";
+var customSearchID = "008009853809126469287:uldov4hqocq";
+var numOfReturnedImgs = 5;
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
@@ -69,5 +75,15 @@ router.get('/test', function(req, res, next) {
       ]
   });
 });
+
+function getImg(keyword) {
+	requestify.get('https://www.googleapis.com/customsearch/v1?q=' + keyword + '&cx=' + customSearchID + '&imgSize=xlarge&num=' + numOfReturnedImgs + '&searchType=image&key=' + googleAPIKey)
+		.then(function(response) {
+			for (var i=0; i<response.getBody()["items"].length; i++) {
+				console.log(response.getBody()["items"][i]["link"]);
+			}
+		}
+	);
+}
 
 module.exports = router;
