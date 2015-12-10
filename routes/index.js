@@ -9,11 +9,11 @@ var textapi = new AYLIENTextAPI({
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
-  res.render('index', { title: 'auto-presi' });
+  res.render('index', { title: 'auto-pres' });
 });
 
 router.post('/', function(req, res, next) {
-	var text = req.body['textinput'];
+	var text = req.body['speech'];
 	console.log(text);
 
 	textapi.entities(text, function(error, response) {
