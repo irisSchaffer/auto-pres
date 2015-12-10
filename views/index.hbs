@@ -2,8 +2,11 @@
 <p>Welcome to {{title}}</p>
 <form action="/" method="POST">
 	<label for="textinput">Enter your text here:</label>
-	<textarea id="textinput" name="textinput"></textarea>
+	<textarea id="textinput" name="textinput">{{textfieldcache}}</textarea>
 	<input type="submit" value="Create slides">
 </form>
 <h2>Keywords:</h2>
 <p>{{keywords}}</p>
+
+<h2>DEBUG STUFF:</h2>
+{{debugstuff}}

@@ -1,5 +1,6 @@
 var express = require('express');
 var router = express.Router();
+var Q = require('q');
 
 var AYLIENTextAPI = require("aylien_textapi");
 var textapi = new AYLIENTextAPI({
@@ -14,20 +15,39 @@ router.get('/', function(req, res, next) {
 
 router.post('/', function(req, res, next) {
 	var text = req.body['textinput'];
-	console.log(text);
+	var paragraphs = [];
+	// TODO: SEVERAL RETURNS COULD BE BAD 
+	paragraphs = text.split("\n\r\n");
+	debuginfo = "";
 	
-	textapi.entities(text, function(error, response) {
-		var keys = "";
-		if (error === null) {
-			Object.keys(response.entities).forEach(function(e) {
-				keys += e + ": " + response.entities[e].join(",");
-				//console.log(e + ": " + response.entities[e].join(","));
-			});
-		}
-		console.log(keys);
-		res.render('index', { title: "Express", keywords: keys });
+	
+	Q.all(paragraphs.map(receiveKeywordsForParagraphs)).done(function (keywordarray) {
+		console.log(keywordarray);
+		res.render('index', { title: "Express", keywords: keywordarray , textfieldcache: text, debugstuff: debuginfo});
 	});
 });
+
+
+
+function receiveKeywordsForParagraphs (paragraph) {	
+	var deferred = Q.defer();
+	
+	textapi.entities(paragraph, function(error, response) {
+			var keys = "";
+			if (error === null) {
+					console.log(paragraph);
+				
+				Object.keys(response.entities).forEach(function(e) {
+					keys += e + ": " + response.entities[e].join(",");
+				});
+				
+				deferred.resolve(response.entities["keyword"][0]);
+			} else {
+				deferred.reject(error);
+			}
+		});
+	return deferred.promise;
+}
 
 router.get('/test', function(req, res, next) {
   res.render('presentation',
