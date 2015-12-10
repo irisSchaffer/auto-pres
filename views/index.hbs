@@ -1,14 +1,22 @@
 <h1>{{title}}</h1>
-<p>auto-pres is a tool that automatically creates presentations for your speeches.</p>
-<p>Simply paste your speech into below text area, wait for us to analyse your speech and lean back as we create
+
+<p>
+    <em>auto-presi</em> is a tool that automatically creates presentations for your speeches.
+    Simply paste your speech into below text area, wait for us to analyse your speech and lean back as we create
     a stunning presentation for you.
 </p>
-<p>Once the presentation is finished, just <strong>press `s`</strong> to access your original speech in the
+<p>
+    Once the presentation is finished, just <strong>press `s`</strong> to access your original speech in the
     speaker-notes.
 </p>
 
-<form action="slides" method="POST">
-	<label for="textinput">Enter your text here:</label>
-	<textarea id="textinput" name="textinput"></textarea>
-	<input type="submit" value="Create slides">
+<form action="/" method="POST">
+    <div class="form-group">
+        <label for="speech">Enter the transcript of your speech here:</label>
+        <textarea class="form-control" id="speech" name="speech" rows="10"></textarea>
+    </div>
+
+	<input type="submit" value="Create Slides" class="btn btn-primary">
 </form>
+<h2>Keywords:</h2>
+<p>{{keywords}}</p>
