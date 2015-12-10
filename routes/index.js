@@ -10,11 +10,11 @@ var textapi = new AYLIENTextAPI({
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
-  res.render('index', { title: 'Express' });
+  res.render('index', { title: 'auto-pres' });
 });
 
 router.post('/', function(req, res, next) {
-	var text = req.body['textinput'];
+	var text = req.body['speech'];
 	var paragraphs = [];
 	// TODO: SEVERAL RETURNS COULD BE BAD 
 	paragraphs = text.split("\n\r\n");
