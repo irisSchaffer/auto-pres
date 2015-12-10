@@ -28,8 +28,10 @@ router.post('/', function(req, res, next) {
 	
 	
 	Q.all(paragraphs.map(receiveKeywordsForParagraphs)).done(function (keywordarray) {
-		console.log(keywordarray);
-		res.render('index', { title: "Express", keywords: keywordarray , textfieldcache: text, debugstuff: debuginfo});
+		
+		Q.all(keywordarray.map(getImg)).done(function (urls) {
+			res.render('index', { title: "Express", keywords: keywordarray, imgs: urls, textfieldcache: text, debugstuff: debuginfo});
+		});
 	});
 });
 
@@ -46,7 +48,7 @@ function receiveKeywordsForParagraphs (paragraph) {
 				Object.keys(response.entities).forEach(function(e) {
 					keys += e + ": " + response.entities[e].join(",");
 				});
-				
+				// TODO: IF TEXT HAS NO KEYWORDS, IT CRASHES!
 				deferred.resolve(response.entities["keyword"][0]);
 			} else {
 				deferred.reject(error);
@@ -77,13 +79,20 @@ router.get('/test', function(req, res, next) {
 });
 
 function getImg(keyword) {
+	var deferred = Q.defer();
+	
 	requestify.get('https://www.googleapis.com/customsearch/v1?q=' + keyword + '&cx=' + customSearchID + '&imgSize=xlarge&num=' + numOfReturnedImgs + '&searchType=image&key=' + googleAPIKey)
 		.then(function(response) {
+			var urls = [];
 			for (var i=0; i<response.getBody()["items"].length; i++) {
 				console.log(response.getBody()["items"][i]["link"]);
+				urls[i] = "<img src='" + response.getBody()["items"][i]["link"] + "'>";
 			}
+			deferred.resolve(urls);
 		}
 	);
+	
+	return deferred.promise;
 }
 
 module.exports = router;
