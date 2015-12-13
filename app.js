@@ -3,9 +3,8 @@ var path = require('path');
 var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
+var sessions = require('client-sessions');
 var bodyParser = require('body-parser');
-
-var routes = require('./routes/index');
 
 var app = express();
 
@@ -16,12 +15,20 @@ app.set('view engine', 'hbs');
 // uncomment after placing your favicon in /public
 //app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 app.use(logger('dev'));
+app.use(sessions({
+    cookieName: 'session',
+    secret: 'BITrSwKx1CzDFIg0BzDj',
+    duration: 30 * 60 * 1000,
+    activeDuration: 5 * 60 * 1000
+
+}));
+app.use(cookieParser());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
-app.use(cookieParser());
 app.use(require('less-middleware')(path.join(__dirname, 'public')));
 app.use(express.static(path.join(__dirname, 'public')));
 
+var routes = require('./routes/index');
 app.use('/', routes);
 
 // catch 404 and forward to error handler

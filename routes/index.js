@@ -6,89 +6,145 @@ var requestify = require('requestify');
 
 var AYLIENTextAPI = require("aylien_textapi");
 var textapi = new AYLIENTextAPI({
-  application_id: "80889f4e",
-  application_key: "48d80b752d6cd44405ade5da12080d06"
+    application_id: "80889f4e",
+    application_key: "48d80b752d6cd44405ade5da12080d06"
 });
 
-var googleAPIKey = "AIzaSyDjP8xj-TC_meQ4-gtoFVKr65yCpk1HPOc";
+var googleAPIKey = "AIzaSyD5jRudi7HuJnQvTjXA8dCV3BM6zlMZDkg";
 var customSearchID = "008009853809126469287:uldov4hqocq";
-var numOfReturnedImgs = 5;
+var numOfReturnedImgs = 1;
+var imageSize = 'xlarge';
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
-  res.render('index', { title: 'auto-pres' });
+    console.log(req.session);
+    req.session.test = "test";
+    res.render('index', { title: 'auto-pres' });
 });
 
-router.post('/', function(req, res, next) {
+/**
+ * Get route for presentation. If session with presentation was previously set, uses this presentation, otherwise
+ * redirects to start page.
+ * This is necessary for the speaker notes which send a request to /presentations again.
+ */
+router.get('/presentation', function(req, res, next) {
+    console.log(req.session);
+    if (req.session && req.session.presentation) {
+       res.render('presentation',
+           {
+               layout: '',
+               presentation: req.session.presentation
+           }
+       );
+    } else {
+       res.redirect('/');
+    }
+});
+
+/**
+ * Post route for /presentation. Takes the speech that is sent per POST and creates a presentation out of it.
+ * This presentation is also stored in the session for accessing speaker notes (see presentation get route).
+ */
+router.post('/presentation', function(req, res, next) {
+    console.log(req.session);
 	var text = req.body['speech'];
 	var paragraphs = [];
 	// TODO: SEVERAL RETURNS COULD BE BAD 
 	paragraphs = text.split("\n\r\n");
 	debuginfo = "";
-	
-	
-	Q.all(paragraphs.map(receiveKeywordsForParagraphs)).done(function (keywordarray) {
-		
-		Q.all(keywordarray.map(getImg)).done(function (urls) {
-			res.render('index', { title: "Express", keywords: keywordarray, imgs: urls, textfieldcache: text, debugstuff: debuginfo});
-		});
+
+    console.log("getting keywords for paragraphs");
+	Q.all(paragraphs.map(getKeywordForParagraph)).done(function (presentation) {
+        presentation = removeEmptyKeywords(presentation);
+        presentation.map(addSearchTermFromKeywords);
+
+        console.log("getting images for keyword");
+		Q.all(presentation.map(addImg)).done(function (presentation) {
+
+            console.log("rendering");
+            req.session.presentation = presentation;
+            console.log(req.session);
+            res.render('presentation',
+                {
+                    layout: '',
+                    presentation: presentation
+                }
+            );
+        });
 	});
 });
 
 
-
-function receiveKeywordsForParagraphs (paragraph) {	
+/**
+ * Returns promise for keywords found for provided paragraph.
+ * If no keywords are found, appends the paragraph to the next one, which is why we need index and paragraphs.
+ * @param paragraph
+ * @param index
+ * @param paragraphs
+ * @returns {*|promise} promise resolved to an object of text and keywords or rejected as error
+ */
+function getKeywordForParagraph (paragraph, index, paragraphs) {
 	var deferred = Q.defer();
 	
 	textapi.entities(paragraph, function(error, response) {
-			var keys = "";
-			if (error === null) {
-					console.log(paragraph);
-				
-				Object.keys(response.entities).forEach(function(e) {
-					keys += e + ": " + response.entities[e].join(",");
-				});
-				// TODO: IF TEXT HAS NO KEYWORDS, IT CRASHES!
-				deferred.resolve(response.entities["keyword"][0]);
-			} else {
-				deferred.reject(error);
-			}
-		});
+        var keys = "";
+        if (error === null) {
+            Object.keys(response.entities).forEach(function(e) {
+                keys += e + ": " + response.entities[e].join(",");
+            });
+
+            // TODO: IF TEXT HAS NO KEYWORDS, IT CRASHES!
+            // TODO: Check if this looks right in the notes
+            if (!response.entities['keyword']) {
+                paragraphs[index] = paragraph + paragraphs[index];
+
+            }
+
+            deferred.resolve({
+                'text': paragraph,
+                'keywords': response.entities['keyword']
+            });
+
+        } else {
+            deferred.reject(error);
+        }
+    });
+
 	return deferred.promise;
 }
 
-router.get('/test', function(req, res, next) {
-  res.render('presentation',
-  {
-      layout: '',
-      images: [
-          {
-              img_url: "http://www.planwallpaper.com/static/images/Winter-Tiger-Wild-Cat-Images.jpg",
-              text: "Test Text 1"
-          },
-          {
-              img_url: "http://www.gettyimages.ca/gi-resources/images/Homepage/Hero/UK/CMS_Creative_164657191_Kingfisher.jpg",
-              text: "Test Text 2"
-          },
-          {
-              img_url: "http://blog.jimdo.com/wp-content/uploads/2014/01/tree-247122.jpg",
-              text: "Test Text 3"
-          }
-      ]
-  });
-});
+/**
+ * Method returning search term for keywords. For now just take the first keyword.
+ * @param keywords array of keywords
+ * @returns string
+ */
+function addSearchTermFromKeywords(slide) {
+    slide['searchTerm'] = slide.keywords[0];
+}
 
-function getImg(keyword) {
+/**
+ * Removes slides with empty keywords from presentation
+ * @param presentation
+ */
+function removeEmptyKeywords(presentation) {
+    return presentation.filter(function(slide) {
+        return (slide.keywords != undefined);
+    });
+}
+
+/**
+ * Method returning image-uris for a search-term
+ * @param slide
+ * @returns {*|promise}
+ */
+function addImg(slide) {
 	var deferred = Q.defer();
-	
-	requestify.get('https://www.googleapis.com/customsearch/v1?q=' + keyword + '&cx=' + customSearchID + '&imgSize=xlarge&num=' + numOfReturnedImgs + '&searchType=image&key=' + googleAPIKey)
+	console.log('https://www.googleapis.com/customsearch/v1?q=' + slide.searchTerm + '&cx=' + customSearchID + '&imgSize=' + imageSize + '&num=' + numOfReturnedImgs + '&searchType=image&key=' + googleAPIKey);
+	requestify.get('https://www.googleapis.com/customsearch/v1?q=' + slide.searchTerm + '&cx=' + customSearchID + '&imgSize=' + imageSize + '&num=' + numOfReturnedImgs + '&searchType=image&key=' + googleAPIKey)
 		.then(function(response) {
-			var urls = [];
-			for (var i=0; i<response.getBody()["items"].length; i++) {
-				console.log(response.getBody()["items"][i]["link"]);
-				urls[i] = "<img src='" + response.getBody()["items"][i]["link"] + "'>";
-			}
-			deferred.resolve(urls);
+
+            slide['img_url'] = response.getBody()["items"][0]["link"];
+			deferred.resolve(slide);
 		}
 	);
 	
